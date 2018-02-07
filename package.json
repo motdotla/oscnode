@@ -1,0 +1,54 @@
+{
+  "name": "oscnode",
+  "productName": "oscnode",
+  "version": "0.1.0",
+  "description": "Open Source Citizen Node",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "yarn install && electron ./src --enable-logging",
+    "dist": "rimraf dist && yarn install && electron-builder",
+    "release": "build",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "keywords": [],
+  "author": "motdotla",
+  "license": "MIT",
+  "build": {
+    "appId": "org.opensourcecitizen.oscnode",
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "publish": "github"
+    },
+    "dmg": {
+      "contents": [
+        {
+          "x": 110,
+          "y": 150
+        },
+        {
+          "x": 410,
+          "y": 150,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    }
+  },
+  "dependencies": {
+    "about-window": "^1.9.1",
+    "auto-launch": "^5.0.5",
+    "battery-level": "^3.0.0",
+    "electron-is-dev": "^0.3.0",
+    "electron-squirrel-startup": "^1.0.0",
+    "is-charging": "^1.2.0"
+  },
+  "devDependencies": {
+    "babel-plugin-transform-async-to-generator": "^6.24.1",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-react": "^6.24.1",
+    "electron-builder": "^19.56.0",
+    "electron-prebuilt-compile": "1.7.11",
+    "rimraf": "^2.6.2",
+    "standard": "^10.0.3"
+  }
+}

