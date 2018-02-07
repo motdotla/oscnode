@@ -203,7 +203,7 @@ const createMainWindow = () => {
 
 const checkForUpdates = () => {
   if (!isDev) {
-    const server = 'https://hazel-server-vxdrfgnxcw.now.sh'
+    const server = 'https://oscnode-updates.now.sh'
     const feed = `${server}/update/${process.platform}/${app.getVersion()}`
     autoUpdater.setFeedURL(feed)
 
