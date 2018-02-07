@@ -209,7 +209,7 @@ const checkForUpdates = () => {
 
     setInterval(() => {
       autoUpdater.checkForUpdates()
-    }, 60000)
+    }, 1 * 60 * 60 * 1000) // Check every 1 hr
 
     autoUpdater.on('update-downloaded', (event, releaseNotes, releaseName) => {
       const dialogOpts = {
