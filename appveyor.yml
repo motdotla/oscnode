@@ -6,6 +6,13 @@ platform:
 cache:
   - node_modules
   - '%USERPROFILE%\.electron'
+branches:
+  # whitelist
+  only:
+    - master
+
+# Start builds on tags only (GitHub and BitBucket)
+skip_non_tags: true
 
 init:
   - git config --global core.autocrlf input
