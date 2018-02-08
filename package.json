@@ -32,6 +32,9 @@
           "path": "/Applications"
         }
       ]
+    },
+    "win": {
+      "publish": "github"
     }
   },
   "dependencies": {
