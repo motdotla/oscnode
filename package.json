@@ -1,7 +1,7 @@
 {
   "name": "oscnode",
   "productName": "oscnode",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Open Source Citizen Node",
   "main": "src/index.js",
   "scripts": {
@@ -40,7 +40,8 @@
     "battery-level": "^3.0.0",
     "electron-is-dev": "^0.3.0",
     "electron-squirrel-startup": "^1.0.0",
-    "is-charging": "^1.2.0"
+    "is-charging": "^1.2.0",
+    "node-machine-id": "^1.1.10"
   },
   "devDependencies": {
     "babel-plugin-transform-async-to-generator": "^6.24.1",
