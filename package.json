@@ -1,13 +1,13 @@
 {
   "name": "oscnode",
   "productName": "oscnode",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Open Source Citizen Node",
   "main": "src/index.js",
   "scripts": {
     "start": "yarn install && electron ./src --enable-logging",
-    "dist": "rimraf dist && yarn install && electron-builder",
-    "release": "build",
+    "localdist": "yarn install && electron-builder",
+    "dist": "yarn install && build --publish onTagOrDraft",
     "postinstall": "electron-builder install-app-deps"
   },
   "keywords": [],
@@ -32,6 +32,10 @@
           "path": "/Applications"
         }
       ]
+    },
+    "win": {
+      "target": "squirrel",
+      "publish": "github"
     }
   },
   "dependencies": {
@@ -48,6 +52,7 @@
     "babel-preset-env": "^1.6.1",
     "babel-preset-react": "^6.24.1",
     "electron-builder": "^19.56.0",
+    "electron-builder-squirrel-windows": "^20.0.2",
     "electron-prebuilt-compile": "1.7.11",
     "rimraf": "^2.6.2",
     "standard": "^10.0.3"
