@@ -1,13 +1,14 @@
 'use strict'
 
 const electron = require('electron')
-const { app, ipcMain, BrowserWindow, Tray, Menu, Notification, autoUpdater, dialog } = require('electron')
+const { app, ipcMain, BrowserWindow, Tray, Menu, Notification, autoUpdater, dialog, net } = require('electron')
 const path = require('path')
 const isCharging = require('is-charging')
 const batteryLevel = require('battery-level')
 const AutoLaunch = require('auto-launch')
 const AboutWindow = require('about-window').default
 const isDev = require('electron-is-dev')
+const machineIdSync =require('node-machine-id').machineIdSync
 
 let tray
 let timeoutObj
@@ -16,7 +17,7 @@ let backgroundWindow
 
 // autolaunch
 const autoLauncher = new AutoLaunch({name: 'oscnode'})
-autoLauncher.enable();
+autoLauncher.enable()
 
 // constants
 const minBatteryLevel = 0.3
@@ -138,6 +139,29 @@ const resumeBackgroundWindow = () => {
   }
 }
 
+const ping = (machineId) => {
+  const url = 'http://www.opensourcecitizen.org/v1/node/ping?machine_id=' + machineId
+
+  try {
+    const request = net.request({ url: url })
+    request.on('error', () => {}) // do nothing - could be bad internet or site temporarily down
+    request.end()
+  } catch(err) {
+    // do nothing
+  }
+}
+
+const pingOnInterval = () => {
+  const machineId = machineIdSync()
+  const interval = 15 * 60 * 1000 // every 15 minutes
+
+  ping(machineId) // start with an initial ping
+
+  setInterval( () => {
+    ping(machineId)
+  }, interval)
+}
+
 const openAboutWindow = () => {
   AboutWindow({
     icon_path: path.join(__dirname, 'assets', 'icons', '256x256.png'),
@@ -241,6 +265,8 @@ app.on('ready', () => {
   createMainWindow()
   createBackgroundWindow()
   decideToPauseBackgroundWindowIfBattery()
+
+  pingOnInterval()
 
   electron.powerMonitor.on('on-battery', decideToPauseBackgroundWindow)
   electron.powerMonitor.on('on-ac', resumeBackgroundWindow)
