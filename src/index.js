@@ -337,18 +337,6 @@ const checkForUpdates = () => {
   }
 }
 
-// const createAuthWindow = () => {
-//  authWindow = new BrowserWindow({
-//    width: 800,
-//    height: 600,
-//    show: false,
-//    'node-integration': false
-//  })
-//  authWindow.loadURL(authUrl)
-//  authWindow.show()
-// }
-
-
 // Don't show the app in the dock
 app.dock.hide()
 
