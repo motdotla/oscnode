@@ -29,7 +29,7 @@ yarn release
 + Login - window to login user
 + Preferences - scale contribution level
 + Vary contributions - vary contribution level if lots of CPU already in use
-+ Switch away from coinhive
++ Switch away from coinhive https://jonathanmh.com/using-coinhive-mining-pool/ https://github.com/x25/coinhive-stratum-mining-proxy https://github.com/cazala/coin-hive-stratum
 
 ## Reference
 
