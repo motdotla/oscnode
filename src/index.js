@@ -1,7 +1,7 @@
 'use strict'
 
 const electron = require('electron')
-const { app, ipcMain, BrowserWindow, Tray, Menu, Notification, autoUpdater, dialog, net } = require('electron')
+const { app, ipcMain, BrowserWindow, Tray, Menu, Notification, autoUpdater, dialog, net, shell } = require('electron')
 const path = require('path')
 const isCharging = require('is-charging')
 const batteryLevel = require('battery-level')
@@ -9,6 +9,7 @@ const AutoLaunch = require('auto-launch')
 const AboutWindow = require('about-window').default
 const isDev = require('electron-is-dev')
 const machineIdSync =require('node-machine-id').machineIdSync
+const defaultMenu = require('electron-default-menu')
 const Store = require('electron-store')
 const store = new Store()
 
@@ -337,10 +338,17 @@ const checkForUpdates = () => {
   }
 }
 
+const createDefaultMenu = () => {
+  const menu = defaultMenu(app, shell)
+
+  Menu.setApplicationMenu(Menu.buildFromTemplate(menu))
+}
+
 // Don't show the app in the dock
 app.dock.hide()
 
 app.on('ready', () => {
+  createDefaultMenu()
   checkForUpdates()
   createTray()
   createMainWindow()
