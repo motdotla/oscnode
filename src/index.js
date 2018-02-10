@@ -9,10 +9,13 @@ const AutoLaunch = require('auto-launch')
 const AboutWindow = require('about-window').default
 const isDev = require('electron-is-dev')
 const machineIdSync =require('node-machine-id').machineIdSync
+const Store = require('electron-store')
+const store = new Store()
 
 let tray
 let timeoutObj
 let mainWindow
+let authWindow
 let backgroundWindow
 
 // autolaunch
@@ -66,12 +69,14 @@ const decideToPauseBackgroundWindowIfBattery = () => {
   }, 3000)
 }
 
-
 const pauseBackgroundWindow = (timeout = null) => {
   console.log('oscnode:', 'pause background window')
 
   tray.setImage(path.join(__dirname, 'assets', 'icons', 'disabled', '16x16.png'))
-  tray.setContextMenu(menuTemplateOff)
+
+  store.set('settings.paused', true)
+
+  rebuildMenu()
 
   backgroundWindow.close()
 
@@ -133,7 +138,10 @@ const resumeBackgroundWindow = () => {
     console.log('oscnode:', 'resume background window')
 
     tray.setImage(path.join(__dirname, 'assets', 'icons', '16x16.png'))
-    tray.setContextMenu(menuTemplateOn)
+
+    store.set('settings.paused', false)
+
+    rebuildMenu()
 
     createBackgroundWindow()
   }
@@ -162,6 +170,26 @@ const pingOnInterval = () => {
   }, interval)
 }
 
+const openAuthWindow = () => {
+  if (authWindow) {
+    authWindow.close()
+  }
+
+  // Create the browser window.
+  authWindow = new BrowserWindow({
+    width: 323,
+    height: 423,
+    show: true,
+    icon: path.join(__dirname, 'assets', 'icons', '512x512.png')
+  })
+
+  authWindow.loadURL(`file://${__dirname}/auth.html`)
+
+  authWindow.on('closed', () => {
+    authWindow = null
+  })
+}
+
 const openAboutWindow = () => {
   AboutWindow({
     icon_path: path.join(__dirname, 'assets', 'icons', '256x256.png'),
@@ -170,41 +198,94 @@ const openAboutWindow = () => {
   })
 }
 
-const menuTemplateOn = Menu.buildFromTemplate([
-  { label: 'OSC: Contributing...', type: 'normal', enabled: false },
-  { label: 'Pause OSC', submenu: [
-    {
-      label: 'for an hour', 
-      click: pauseForOneHour
-    },
-    {
-      label: 'for a few hours', 
-      click: pauseForAFewHours
-    },
-    {
-      label: 'for a day', 
-      click: pauseForADay
-    }
-  ] },
-  { type: 'separator' },
-  { label: 'About OSC', type: 'normal', click: openAboutWindow },
-  { type: 'separator' },
-  { label: 'Quit', type: 'normal', click: app.quit }
-])
+const logout = () => {
+  store.set('settings.recognized', false)
 
-const menuTemplateOff = Menu.buildFromTemplate([
-  { label: 'OSC: Paused', type: 'normal', enabled: false },
-  { label: 'Resume OSC', type: 'normal', click: resumeBackgroundWindow },
-  { type: 'separator' },
-  { label: 'About OSC', type: 'normal', click: openAboutWindow },
-  { type: 'separator' },
-  { label: 'Quit', type: 'normal', click: app.quit }
-])
+  rebuildMenu()
+}
+
+const rebuildMenu = () => {
+  const pausedMenuParts = [
+    { label: 'OSC: Paused', type: 'normal', enabled: false },
+    { label: 'Resume OSC', type: 'normal', click: resumeBackgroundWindow }
+  ]
+
+  const contributingMenuParts = [
+    { label: 'OSC: Contributing...', type: 'normal', enabled: false },
+    { label: 'Pause OSC', submenu: [
+      {
+        label: 'for an hour', 
+        click: pauseForOneHour
+      },
+      {
+        label: 'for a few hours', 
+        click: pauseForAFewHours
+      },
+      {
+        label: 'for a day', 
+        click: pauseForADay
+      }
+    ] }
+  ]
+
+  const unrecognizedMenuParts = [
+    { type: 'separator' },
+    { label: 'Connect My Citizenship', type: 'normal', click: openAuthWindow },
+  ]
+
+  const recognizedMenuParts = [
+    { type: 'separator' },
+    { label: 'My Citizenship', submenu: [
+      {
+        label: store.get('citizen.sub'),
+        type: 'normal',
+        enabled: false
+      },
+      {
+        label: 'Log out',
+        click: logout
+      }
+    ] }
+  ]
+
+  const remainderMenuParts = [
+    { type: 'separator' },
+    { label: 'About OSC', type: 'normal', click: openAboutWindow },
+    { type: 'separator' },
+    { label: 'Quit', type: 'normal', click: app.quit }
+  ]
+
+  let menu = []
+
+  const isPaused = store.get('settings.paused')
+  const isRecognized = store.get('settings.recognized')
+
+  if (isPaused) {
+    menu = menu.concat(pausedMenuParts)
+  } else {
+    menu = menu.concat(contributingMenuParts)
+  }
+
+  if (isRecognized) {
+    menu = menu.concat(recognizedMenuParts)
+  } else {
+    menu = menu.concat(unrecognizedMenuParts)
+  }
+
+  menu = menu.concat(remainderMenuParts)
+
+  const contextMenu = Menu.buildFromTemplate(menu)
+
+  tray.setContextMenu(contextMenu)
+}
 
 const createTray = () => {
   tray = new Tray(path.join(__dirname, 'assets', 'icons', '16x16.png'))
   tray.setToolTip('Open Source Citizen')
-  tray.setContextMenu(menuTemplateOn)
+
+  store.set('settings.paused', false)
+
+  rebuildMenu()
 }
 
 const createMainWindow = () => {
@@ -256,6 +337,18 @@ const checkForUpdates = () => {
   }
 }
 
+// const createAuthWindow = () => {
+//  authWindow = new BrowserWindow({
+//    width: 800,
+//    height: 600,
+//    show: false,
+//    'node-integration': false
+//  })
+//  authWindow.loadURL(authUrl)
+//  authWindow.show()
+// }
+
+
 // Don't show the app in the dock
 app.dock.hide()
 
@@ -291,4 +384,13 @@ app.on('activate', () => {
 
 ipcMain.on('contribution-channel', (event, payload) => {
   console.log('oscnode', payload)
+})
+
+ipcMain.on('auth-channel', (event, payload) => {
+  store.set('citizen.sub', payload['sub'])
+  store.set('settings.recognized', true)
+
+  rebuildMenu()
+
+  authWindow.close()
 })
