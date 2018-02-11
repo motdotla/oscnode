@@ -1,7 +1,7 @@
 'use strict'
 
 const electron = require('electron')
-const { app, ipcMain, BrowserWindow, Tray, Menu, Notification, autoUpdater, dialog, net, shell } = require('electron')
+const { app, ipcMain, BrowserWindow, Tray, Menu, Notification, autoUpdater, dialog, net, shell, session } = require('electron')
 const path = require('path')
 const isCharging = require('is-charging')
 const batteryLevel = require('battery-level')
@@ -172,19 +172,44 @@ const pingOnInterval = () => {
 }
 
 const openAuthWindow = () => {
+  // delete current store around being logged in
+  store.delete('citizen.id')
+  store.set('settings.recognized', false)
+
+
   if (authWindow) {
     authWindow.close()
   }
 
   // Create the browser window.
   authWindow = new BrowserWindow({
-    width: 323,
+    width: 370,
     height: 423,
     show: true,
     icon: path.join(__dirname, 'assets', 'icons', '512x512.png')
   })
 
-  authWindow.loadURL(`file://${__dirname}/auth.html`)
+  authWindow.loadURL('http://www.opensourcecitizen.org/login')
+
+  authWindow.webContents.on('did-get-redirect-request', (event, oldUrl, url) => { 
+    // check if the callback url - the last step. brittle.
+    const regex = 'auth\/.+\/callback'
+
+    if (oldUrl.search(regex) != -1) {
+      session.defaultSession.cookies.get({url: 'http://www.opensourcecitizen.org', name: 'citizen_id'}, (error, cookies) => {
+        const citizenIdCookie = cookies[0] // first cookie
+
+        if (citizenIdCookie) {
+          store.set('citizen.id', ''+citizenIdCookie['value'])
+          store.set('settings.recognized', true)
+
+          rebuildMenu()
+    
+          authWindow.close()
+        }
+      })
+    }
+  })
 
   authWindow.on('closed', () => {
     authWindow = null
@@ -238,7 +263,7 @@ const rebuildMenu = () => {
     { type: 'separator' },
     { label: 'My Citizenship', submenu: [
       {
-        label: store.get('citizen.sub'),
+        label: `Citizen ${store.get('citizen.id')}`,
         type: 'normal',
         enabled: false
       },
@@ -380,13 +405,4 @@ app.on('activate', () => {
 
 ipcMain.on('contribution-channel', (event, payload) => {
   console.log('oscnode', payload)
-})
-
-ipcMain.on('auth-channel', (event, payload) => {
-  store.set('citizen.sub', payload['sub'])
-  store.set('settings.recognized', true)
-
-  rebuildMenu()
-
-  authWindow.close()
 })
