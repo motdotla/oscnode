@@ -417,7 +417,9 @@ const createDefaultMenu = () => {
 }
 
 // Don't show the app in the dock
-app.dock.hide()
+if (app.dock) {
+  app.dock.hide()
+}
 
 app.on('ready', () => {
   createDefaultMenu()
