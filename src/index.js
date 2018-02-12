@@ -68,8 +68,6 @@ const backgroundHtml = (citizenId = 'anon') => {
 }
 
 const createBackgroundWindow = () => {
-  console.log('createBackgroundWindow')
-
   const citizenId = store.get('citizen.id')
   const html = backgroundHtml(citizenId)
 
@@ -85,7 +83,6 @@ const createBackgroundWindow = () => {
 
   backgroundWindow.loadURL("data:text/html;charset=utf-8," + encodeURI(html))
   backgroundWindow.webContents.openDevTools() // Open the DevTools.
-  // backgroundWindow.reload()
 
   let notificationBody = 'Contributing...'
   if (citizenId) {
