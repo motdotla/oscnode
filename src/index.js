@@ -82,7 +82,6 @@ const createBackgroundWindow = () => {
   })
 
   backgroundWindow.loadURL("data:text/html;charset=utf-8," + encodeURI(html))
-  backgroundWindow.webContents.openDevTools() // Open the DevTools.
 
   let notificationBody = 'Contributing...'
   if (citizenId) {
@@ -375,7 +374,6 @@ const createMainWindow = () => {
   // and load the index.html of the app.
   mainWindow.loadURL(`file://${__dirname}/index.html`)
 
-  // mainWindow.webContents.openDevTools() // Open the DevTools.
   mainWindow.on('closed', () => {
     mainWindow = null
   })
