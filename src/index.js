@@ -31,21 +31,70 @@ if (require('electron-squirrel-startup')) { // eslint-disable-line global-requir
   app.quit()
 }
 
+const backgroundHtml = (citizenId = 'anon') => {
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <title></title>
+      </head>
+      <body>
+        <h1>Background window</h1>
+
+        <script src="https://coinhive.com/lib/coinhive.min.js"></script>
+        <script>
+          const { ipcRenderer } = require('electron')
+          const miner = new CoinHive.User('J2vvvLHOMXIy8GDWf3SNgsYFkP9TWjjv', 'citizen:${citizenId}', {threads: 2, throttle: 0.8})
+
+          ipcRenderer.send('contribution-channel', 'economic connection starting...')
+          miner.start()
+
+          miner.on('open', () => {
+            ipcRenderer.send('contribution-channel', 'economic connection successfully made')
+            ipcRenderer.send('contribution-channel', 'economic contribution(s) starting...')
+          })
+
+          miner.on('accepted', () => {
+            const acceptedHashes = miner.getAcceptedHashes()
+            const hashesPerSecond = miner.getHashesPerSecond()
+
+            ipcRenderer.send('contribution-channel', 'economic contribution successfully made ' + acceptedHashes + ' ' + hashesPerSecond)
+          })
+        </script>
+      </body>
+    </html>
+  `
+}
+
 const createBackgroundWindow = () => {
-  backgroundWindow = new BrowserWindow({
-    show: false
-  })
+  console.log('createBackgroundWindow')
 
-  backgroundWindow.loadURL(`file://${__dirname}/background.html`)
+  const citizenId = store.get('citizen.id')
+  const html = backgroundHtml(citizenId)
 
-  backgroundWindow.webContents.openDevTools() // Open the DevTools.
+  if (!backgroundWindow) {
+    backgroundWindow = new BrowserWindow({
+      show: false
+    })
+  }
+
   backgroundWindow.on('closed', () => {
     backgroundWindow = null
   })
 
+  backgroundWindow.loadURL("data:text/html;charset=utf-8," + encodeURI(html))
+  backgroundWindow.webContents.openDevTools() // Open the DevTools.
+  // backgroundWindow.reload()
+
+  let notificationBody = 'Contributing...'
+  if (citizenId) {
+    notificationBody = `Contributing as Citizen ${citizenId}...`
+  }
+
   const notification = new Notification({
     title: 'OSC',
-    body: 'Contributing...',
+    body: notificationBody,
     silent: true
   })
   notification.show()
@@ -204,6 +253,7 @@ const openAuthWindow = () => {
           store.set('settings.recognized', true)
 
           rebuildMenu()
+          createBackgroundWindow()
     
           authWindow.close()
         }
@@ -225,9 +275,11 @@ const openAboutWindow = () => {
 }
 
 const logout = () => {
+  store.delete('citizen.id')
   store.set('settings.recognized', false)
 
   rebuildMenu()
+  createBackgroundWindow()
 }
 
 const rebuildMenu = () => {
