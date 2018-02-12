@@ -1,7 +1,7 @@
 {
   "name": "oscnode",
   "productName": "oscnode",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Open Source Citizen Node",
   "main": "src/index.js",
   "scripts": {
