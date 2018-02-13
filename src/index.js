@@ -12,12 +12,17 @@ const machineIdSync =require('node-machine-id').machineIdSync
 const defaultMenu = require('electron-default-menu')
 const Store = require('electron-store')
 const store = new Store()
+const numeral = require('numeral')
 
 let tray
 let timeoutObj
 let mainWindow
 let authWindow
 let backgroundWindow
+let hashingMetrics = {
+  hashesPerSecond: 2.3,
+  acceptedHashes: null
+}
 
 // autolaunch
 const autoLauncher = new AutoLaunch({name: 'oscnode'})
@@ -29,6 +34,14 @@ const minBatteryLevel = 0.3
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) { // eslint-disable-line global-require
   app.quit()
+}
+
+const formatNumber = (number) => {
+  if (number === null) {
+    return '---'
+  } else {
+    return numeral(number).format('0.0a')
+  }
 }
 
 const backgroundHtml = (citizenId = 'anon') => {
@@ -56,11 +69,16 @@ const backgroundHtml = (citizenId = 'anon') => {
           })
 
           miner.on('accepted', () => {
-            const acceptedHashes = miner.getAcceptedHashes()
-            const hashesPerSecond = miner.getHashesPerSecond()
-
-            ipcRenderer.send('contribution-channel', 'economic contribution successfully made ' + acceptedHashes + ' ' + hashesPerSecond)
+            sendHashingMetrics()
           })
+
+          const sendHashingMetrics = () => {
+            const hashingMetrics = {
+              hashesPerSecond: miner.getHashesPerSecond(),
+              acceptedHashes: miner.getAcceptedHashes()
+            }
+            ipcRenderer.send('hashing-metrics-channel', hashingMetrics)
+          }
         </script>
       </body>
     </html>
@@ -285,7 +303,7 @@ const rebuildMenu = () => {
   ]
 
   const contributingMenuParts = [
-    { label: 'OSC: Contributing...', type: 'normal', enabled: false },
+    { label: `OSC: Contributing ${formatNumber(hashingMetrics['hashesPerSecond'])} h/s...`, type: 'normal', enabled: false },
     { label: 'Pause OSC', submenu: [
       {
         label: 'for an hour', 
@@ -312,6 +330,11 @@ const rebuildMenu = () => {
     { label: 'My Citizenship', submenu: [
       {
         label: `Citizen ${store.get('citizen.id')}`,
+        type: 'normal',
+        enabled: false
+      },
+      {
+        label: `Contributions: ${formatNumber(hashingMetrics['acceptedHashes'])}`,
         type: 'normal',
         enabled: false
       },
@@ -454,4 +477,10 @@ app.on('activate', () => {
 
 ipcMain.on('contribution-channel', (event, payload) => {
   console.log('oscnode', payload)
+})
+
+ipcMain.on('hashing-metrics-channel', (event, payload) => {
+  hashingMetrics = payload
+
+  rebuildMenu()
 })
