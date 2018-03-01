@@ -1,6 +1,10 @@
 # oscnode
 
-The code that powers running your OSC node.
+<img src="https://raw.githubusercontent.com/motdotla/oscnode/master/oscnode.png" alt="OSC Logo" align="right" />
+
+OSC is an economic citizenship experiment aiming to increase economic participation in open source software.
+
+This repository powers the native desktop node.
 
 ## Development
 
