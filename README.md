@@ -6,6 +6,8 @@ OSC is an economic citizenship experiment aiming to increase economic participat
 
 This repository powers the native desktop node.
 
+[![Become a Citizen](http://www.opensourcecitizen.org/badge)](http://www.opensourcecitizen.org/)
+
 ## Development
 
 IMPORTANT: Make sure you are on npm 3. `npm install -g npm@3`. Otherwise, builds might not complete.
